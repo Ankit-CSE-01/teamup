@@ -2,7 +2,7 @@ services:
   - type: web
     name: teamup
     runtime: python
-    buildCommand: "./build.sh"
+    buildCommand: "bash ./build.sh"
     startCommand: "gunicorn teamup.wsgi:application"
     plan: free
     envVars:
