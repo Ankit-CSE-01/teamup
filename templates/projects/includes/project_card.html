@@ -1,0 +1,45 @@
+{% load project_extras %}
+<article class="card project-card">
+    <div class="card-header">
+        <div class="badge-group">
+            <a href="{% url 'projects:category_projects' project.category %}" class="badge badge-category">
+                {{ project.get_category_display }}
+            </a>
+            {% if project.status == 'Open' %}
+                <span class="badge badge-open">Open</span>
+            {% else %}
+                <span class="badge badge-closed">Closed</span>
+            {% endif %}
+            {{ project.deadline|deadline_badge:project.status }}
+        </div>
+
+        {% if user.is_authenticated %}
+            <div class="match-pill {% if project.match_score >= 70 %}match-high{% elif project.match_score >= 40 %}match-med{% else %}match-low{% endif %}" title="Skill overlap with your profile">
+                {{ project.match_score|default:0 }}% Skill Match
+            </div>
+        {% endif %}
+    </div>
+
+    <h3 class="card-title">
+        <a href="{% url 'projects:project_detail' project.pk %}">{{ project.title }}</a>
+    </h3>
+
+    <p class="card-desc">{{ project.description|truncatewords:24 }}</p>
+
+    <div class="skills-row">
+        {% for skill in project.skills_needed.all %}
+            <a href="{% url 'projects:project_list' %}?skill={{ skill.slug }}" class="skill-tag">{{ skill.name }}</a>
+        {% empty %}
+            <span class="text-muted">No specific skills listed</span>
+        {% endfor %}
+    </div>
+
+    <div class="card-footer">
+        <div class="meta-info">
+            <span>Lead: <a href="{% url 'accounts:profile_detail' project.owner.username %}"><strong>{{ project.owner.profile.full_name|default:project.owner.username }}</strong></a></span>
+            <span>Team Size: {{ project.team_size_needed }}</span>
+            <span>Apply by: {{ project.deadline|date:"M d, Y" }}</span>
+        </div>
+        <a href="{% url 'projects:project_detail' project.pk %}" class="btn btn-outline btn-sm">View Details →</a>
+    </div>
+</article>

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard | TeamUp{% endblock %}
+
+{% block content %}
+<div class="dashboard-header card">
+    <div>
+        <h1>Welcome, {{ user.profile.full_name|default:user.username }}!</h1>
+        <p class="text-muted">
+            {{ user.profile.branch }} • Year {{ user.profile.year_of_study }} • Skills:
+            {% for skill in user.profile.skills.all %}
+                <span class="skill-tag">{{ skill.name }}</span>
+            {% empty %}
+                <a href="{% url 'accounts:profile_edit' %}">Add your technical skills to unlock match scores →</a>
+            {% endfor %}
+        </p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline">Edit Profile & Skills</a>
+        <a href="{% url 'projects:project_create' %}" class="btn btn-primary">+ Create Project</a>
+    </div>
+</div>
+
+<section class="dashboard-section">
+    <div class="section-title-row">
+        <h2>Recommended For You (Sorted by Skill Match)</h2>
+        <a href="{% url 'projects:project_list' %}">Browse All →</a>
+    </div>
+    <div class="projects-grid">
+        {% for project in recommended_projects %}
+            {% include "projects/includes/project_card.html" with project=project %}
+        {% empty %}
+            <div class="card empty-state">
+                <p>No open projects to recommend right now. Update your profile skills or browse all projects.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<div class="dashboard-two-col">
+    <section class="dashboard-section">
+        <div class="section-title-row">
+            <h2>Pending Requests on My Projects ({{ pending_incoming|length }})</h2>
+            <a href="{% url 'projects:manage_requests' %}">Manage All →</a>
+        </div>
+        <div class="card">
+            {% for req in pending_incoming %}
+                <div class="list-item">
+                    <div>
+                        <strong><a href="{% url 'accounts:profile_detail' req.applicant.username %}">{{ req.applicant.profile.full_name|default:req.applicant.username }}</a></strong>
+                        applied to <strong><a href="{% url 'projects:project_detail' req.project.pk %}">{{ req.project.title }}</a></strong>
+                        <p class="text-muted">{{ req.message|truncatewords:18 }}</p>
+                    </div>
+                    <div class="item-actions">
+                        <form method="post" action="{% url 'projects:handle_request_action' req.pk 'accept' %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary btn-sm">Accept</button>
+                        </form>
+                        <form method="post" action="{% url 'projects:handle_request_action' req.pk 'reject' %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-muted">No pending join requests on your projects right now.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="dashboard-section">
+        <div class="section-title-row">
+            <h2>My Recent Applications</h2>
+            <a href="{% url 'projects:my_applications' %}">View All →</a>
+        </div>
+        <div class="card">
+            {% for app in my_applications %}
+                <div class="list-item">
+                    <div>
+                        <strong><a href="{% url 'projects:project_detail' app.project.pk %}">{{ app.project.title }}</a></strong>
+                        <p class="text-muted">Lead: {{ app.project.owner.username }} • Applied {{ app.created_at|date:"M d" }}</p>
+                    </div>
+                    <span class="badge status-{{ app.status|lower }}">{{ app.status }}</span>
+                </div>
+            {% empty %}
+                <p class="text-muted">You haven't applied to any projects yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<section class="dashboard-section">
+    <div class="section-title-row">
+        <h2>My Owned Projects ({{ my_projects|length }})</h2>
+    </div>
+    <div class="projects-grid">
+        {% for project in my_projects %}
+            {% include "projects/includes/project_card.html" with project=project %}
+        {% empty %}
+            <div class="card empty-state">
+                <p>You haven't created any projects yet.</p>
+                <a href="{% url 'projects:project_create' %}" class="btn btn-primary">Post Your First Project</a>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="dashboard-section">
+    <h2>Recently Viewed Projects (Stored in Session)</h2>
+    <div class="projects-grid">
+        {% for project in recently_viewed %}
+            {% include "projects/includes/project_card.html" with project=project %}
+        {% empty %}
+            <div class="card empty-state">
+                <p class="text-muted">Projects you inspect will appear here (up to your last 5 visited).</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+cd C:\Users\73ank\Desktop\teamup_project
+
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver

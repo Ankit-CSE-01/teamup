@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Student Directory | TeamUp{% endblock %}
+
+{% block content %}
+<section class="hero-banner">
+    <div>
+        <h1>CSE Student & Collaborator Directory</h1>
+        <p>Find developers, designers, and researchers across all branches and years by their technical skills.</p>
+    </div>
+    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline">Update My Skills</a>
+</section>
+
+<section class="filter-bar card">
+    <form method="get" action="{% url 'accounts:student_directory' %}" class="filter-form">
+        <div class="filter-group">
+            <label for="q">Search Student</label>
+            <input type="text" id="q" name="q" value="{{ current_q }}" placeholder="Name, @username, or bio...">
+        </div>
+
+        <div class="filter-group">
+            <label for="skill">Technical Skill</label>
+            <select id="skill" name="skill">
+                <option value="">All Skills</option>
+                {% for s in all_skills %}
+                    <option value="{{ s.slug }}" {% if current_skill == s.slug %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="branch">Branch</label>
+            <select id="branch" name="branch">
+                <option value="">All Branches</option>
+                {% for b in available_branches %}
+                    <option value="{{ b }}" {% if current_branch == b %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="year">Year of Study</label>
+            <select id="year" name="year">
+                <option value="">All Years</option>
+                {% for y_num, y_label in year_choices %}
+                    <option value="{{ y_num }}" {% if current_year == y_num|stringformat:"s" %}selected{% endif %}>{{ y_label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="{% url 'accounts:student_directory' %}" class="btn btn-outline">Reset</a>
+        </div>
+    </form>
+</section>
+
+<section class="projects-grid">
+    {% for student_profile in page_obj %}
+        <article class="card project-card">
+            <div>
+                <div class="card-header">
+                    <span class="badge badge-category">{{ student_profile.branch }}</span>
+                    <span class="badge deadline-closed">{{ student_profile.get_year_of_study_display }}</span>
+                </div>
+
+                <h3 class="card-title">
+                    <a href="{% url 'accounts:profile_detail' student_profile.user.username %}">
+                        {{ student_profile.full_name|default:student_profile.user.username }}
+                    </a>
+                </h3>
+                <p class="text-muted"><small>@{{ student_profile.user.username }}</small></p>
+
+                <p class="card-desc mt-2">
+                    {{ student_profile.bio|default:"No bio added yet."|truncatewords:20 }}
+                </p>
+
+                <div class="skills-row">
+                    {% for skill in student_profile.skills.all %}
+                        <a href="{% url 'accounts:student_directory' %}?skill={{ skill.slug }}" class="skill-tag">{{ skill.name }}</a>
+                    {% empty %}
+                        <span class="text-muted"><small>No skills listed</small></span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="meta-info">
+                    <span>Projects Led: <strong>{{ student_profile.projects_count }}</strong></span>
+                    {% if student_profile.github_url %}
+                        <a href="{{ student_profile.github_url }}" target="_blank" rel="noopener">GitHub Profile &nearr;</a>
+                    {% endif %}
+                </div>
+                <a href="{% url 'accounts:profile_detail' student_profile.user.username %}" class="btn btn-outline btn-sm">View Profile →</a>
+            </div>
+        </article>
+    {% empty %}
+        <div class="empty-state card">
+            <h3>No students match your filters</h3>
+            <p>Try broadening your skill, branch, or year filters.</p>
+            <a href="{% url 'accounts:student_directory' %}" class="btn btn-outline">Show All Students</a>
+        </div>
+    {% endfor %}
+</section>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?q={{ current_q }}&skill={{ current_skill }}&branch={{ current_branch }}&year={{ current_year }}&page={{ page_obj.previous_page_number }}" class="btn btn-outline btn-sm">« Previous</a>
+    {% endif %}
+
+    <span class="page-status">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+        <a href="?q={{ current_q }}&skill={{ current_skill }}&branch={{ current_branch }}&year={{ current_year }}&page={{ page_obj.next_page_number }}" class="btn btn-outline btn-sm">Next »</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Log In | TeamUp{% endblock %}
+
+{% block content %}
+<div class="form-card card">
+    <h1>Student & Faculty Login</h1>
+    <p class="text-muted">Demo credentials: <code>aarav_sharma</code> / <code>teamup123</code></p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
+                {{ field }}
+                {% for error in field.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary btn-block">Log In</button>
+    </form>
+    <p class="text-center mt-2">Need an account? <a href="{% url 'accounts:signup' %}">Create a student profile</a>.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Projects | TeamUp{% endblock %}
+
+{% block content %}
+<section class="hero-banner">
+    <div>
+        <h1>Find Your Next Hackathon or Capstone Team</h1>
+        <p>Discover projects across all CSE sections and years, matched automatically to your technical skills.</p>
+    </div>
+    <div class="header-actions">
+        {% if user.is_authenticated %}
+            {% if user.is_staff or user.is_superuser %}
+                <a href="{% url 'projects:export_rosters_csv' %}?category={{ current_category }}&status={{ current_status }}" class="btn btn-outline">
+                    📥 Export Rosters (CSV)
+                </a>
+            {% endif %}
+            <a href="{% url 'projects:project_create' %}" class="btn btn-primary">+ Pitch a Project</a>
+        {% else %}
+            <a href="{% url 'accounts:signup' %}" class="btn btn-primary">Create Student Profile</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="filter-bar card">
+    <form method="get" action="{% url 'projects:project_list' %}" class="filter-form">
+        <div class="filter-group">
+            <label for="q">Search</label>
+            <input type="text" id="q" name="q" value="{{ current_q }}" placeholder="Keywords in title or description...">
+        </div>
+
+        <div class="filter-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                <option value="">All Categories</option>
+                {% for slug, label in category_choices %}
+                    <option value="{{ slug }}" {% if current_category == slug %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="skill">Skill Needed</label>
+            <select id="skill" name="skill">
+                <option value="">All Skills</option>
+                {% for s in all_skills %}
+                    <option value="{{ s.slug }}" {% if current_skill == s.slug %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">Any Status</option>
+                {% for val, label in status_choices %}
+                    <option value="{{ val }}" {% if current_status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{% url 'projects:project_list' %}" class="btn btn-outline">Reset</a>
+        </div>
+    </form>
+
+    <div class="category-quicklinks">
+        <span>Quick Regex Routes:</span>
+        {% for slug, label in category_choices %}
+            <a href="{% url 'projects:category_projects' slug %}" class="chip {% if current_category == slug %}chip-active{% endif %}">{{ label }}</a>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="projects-grid">
+    {% for project in page_obj %}
+        {% include "projects/includes/project_card.html" with project=project %}
+    {% empty %}
+        <div class="empty-state card">
+            <h3>No matching projects found</h3>
+            <p>Try clearing your search filters or be the first to post a project in this category.</p>
+            <a href="{% url 'projects:project_list' %}" class="btn btn-outline">View All Projects</a>
+        </div>
+    {% endfor %}
+</section>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?q={{ current_q }}&category={{ current_category }}&skill={{ current_skill }}&status={{ current_status }}&page={{ page_obj.previous_page_number }}" class="btn btn-outline btn-sm">« Previous</a>
+    {% endif %}
+
+    <span class="page-status">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+        <a href="?q={{ current_q }}&category={{ current_category }}&skill={{ current_skill }}&status={{ current_status }}&page={{ page_obj.next_page_number }}" class="btn btn-outline btn-sm">Next »</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

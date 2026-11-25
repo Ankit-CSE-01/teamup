@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}403 Forbidden | TeamUp{% endblock %}
+
+{% block content %}
+<div class="card empty-state">
+    <h1>403 — Permission Denied</h1>
+    <p>You do not have permission to perform this action or view this resource.</p>
+    <a href="{% url 'projects:project_list' %}" class="btn btn-primary">Return to Projects</a>
+</div>
+{% endblock %}

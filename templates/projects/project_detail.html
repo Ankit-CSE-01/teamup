@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.title }} | TeamUp{% endblock %}
+
+{% block content %}
+<div class="detail-layout">
+    <div class="detail-main card">
+        <div class="card-header">
+            <div class="badge-group">
+                <a href="{% url 'projects:category_projects' project.category %}" class="badge badge-category">
+                    {{ project.get_category_display }}
+                </a>
+                {% if project.status == 'Open' %}
+                    <span class="badge badge-open">Open for Teammates</span>
+                {% else %}
+                    <span class="badge badge-closed">Closed</span>
+                {% endif %}
+            </div>
+
+            {% if user.is_authenticated %}
+                <span class="match-pill {% if project.match_score >= 70 %}match-high{% elif project.match_score >= 40 %}match-med{% else %}match-low{% endif %}">
+                    Your Skill Match: {{ project.match_score }}%
+                </span>
+            {% endif %}
+        </div>
+
+        <h1>{{ project.title }}</h1>
+
+        <div class="meta-bar">
+            <span>Posted by <a href="{% url 'accounts:profile_detail' project.owner.username %}"><strong>{{ project.owner.profile.full_name|default:project.owner.username }}</strong></a> ({{ project.owner.profile.branch }}, Year {{ project.owner.profile.year_of_study }})</span>
+            <span>• Created {{ project.created_at|date:"M d, Y" }}</span>
+            <span>• Deadline: <strong>{{ project.deadline|date:"M d, Y" }}</strong></span>
+        </div>
+
+        <hr>
+
+        <h3>Problem Statement & Project Overview</h3>
+        <p class="preserve-lines">{{ project.description }}</p>
+
+        <h3>Required Technical Skills</h3>
+        <div class="skills-row">
+            {% for skill in project.skills_needed.all %}
+                <span class="skill-tag">{{ skill.name }}</span>
+            {% empty %}
+                <span class="text-muted">No skills specified.</span>
+            {% endfor %}
+        </div>
+
+        <h3>Current Roster ({{ accepted_members|length|add:1 }} / {{ project.team_size_needed }} Members)</h3>
+        <ul class="roster-list">
+            <li>
+                <strong>{{ project.owner.profile.full_name|default:project.owner.username }}</strong>
+                <span class="badge badge-category">Project Lead</span>
+            </li>
+            {% for req in accepted_members %}
+                <li class="roster-item">
+                    <span>
+                        <a href="{% url 'accounts:profile_detail' req.applicant.username %}">
+                            {{ req.applicant.profile.full_name|default:req.applicant.username }}
+                        </a>
+                        <span class="text-muted">({{ req.applicant.profile.branch }} - Year {{ req.applicant.profile.year_of_study }})</span>
+                    </span>
+                    {% if user == project.owner %}
+                        <form method="post" action="{% url 'projects:handle_request_action' req.pk 'remove' %}" class="inline-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="project_detail">
+                            <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+
+        {% if user == project.owner %}
+            <div class="owner-actions">
+                <a href="{% url 'projects:project_edit' project.pk %}" class="btn btn-primary">Edit Project</a>
+                <a href="{% url 'projects:project_delete' project.pk %}" class="btn btn-danger">Delete Project</a>
+                <a href="{% url 'projects:manage_requests' %}" class="btn btn-outline">Manage Join Requests</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <aside class="detail-sidebar card">
+        <h3>Join This Team</h3>
+        {% if not user.is_authenticated %}
+            <p>Log in with your student account to see your skill match score and apply to join this project.</p>
+            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary btn-block">Log In to Apply</a>
+        {% elif user == project.owner %}
+            <p class="text-muted">You are the owner of this project. Review incoming applications from your request manager.</p>
+            <a href="{% url 'projects:manage_requests' %}" class="btn btn-outline btn-block">View Incoming Requests</a>
+        {% elif existing_request %}
+            <div class="application-status-box">
+                <p>You have already applied to this project.</p>
+                <p>Current Status: <span class="badge status-{{ existing_request.status|lower }}">{{ existing_request.status }}</span></p>
+                <p class="text-muted"><small>Submitted on {{ existing_request.created_at|date:"M d, Y" }}</small></p>
+                {% if existing_request.status == 'Pending' %}
+                    <form method="post" action="{% url 'projects:withdraw_application' existing_request.pk %}" class="mt-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="project_detail">
+                        <button type="submit" class="btn btn-outline btn-sm btn-block">Withdraw Application</button>
+                    </form>
+                {% endif %}
+            </div>
+        {% elif project.status != 'Open' %}
+            <p class="text-muted">This project is currently marked as <strong>Closed</strong> and is no longer accepting new teammates.</p>
+        {% else %}
+            <form method="post" action="{% url 'projects:project_apply' project.pk %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_message">Pitch Yourself to the Team</label>
+                    {{ form.message }}
+                    <small class="help-text">{{ form.message.help_text }}</small>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Send Join Request</button>
+            </form>
+        {% endif %}
+    </aside>
+</div>
+{% endblock %}

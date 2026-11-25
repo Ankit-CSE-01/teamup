@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Join Requests | TeamUp{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Incoming Teammate Requests</h1>
+    <p class="text-muted">Review students who applied to join your projects and accept or reject their applications.</p>
+
+    {% for req in incoming_requests %}
+        <div class="request-row">
+            <div class="request-details">
+                <h3>
+                    <a href="{% url 'accounts:profile_detail' req.applicant.username %}">
+                        {{ req.applicant.profile.full_name|default:req.applicant.username }}
+                    </a>
+                    <small class="text-muted">({{ req.applicant.profile.branch }} • Year {{ req.applicant.profile.year_of_study }})</small>
+                </h3>
+                <p>Applied for: <a href="{% url 'projects:project_detail' req.project.pk %}"><strong>{{ req.project.title }}</strong></a> on {{ req.created_at|date:"M d, Y" }}</p>
+                <p class="pitch-quote">"{{ req.message }}"</p>
+                <div class="skills-row">
+                    <span>Applicant Skills:</span>
+                    {% for skill in req.applicant.profile.skills.all %}
+                        <span class="skill-tag">{{ skill.name }}</span>
+                    {% empty %}
+                        <span class="text-muted">None listed</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="request-actions">
+                <span class="badge status-{{ req.status|lower }}">{{ req.status }}</span>
+                {% if req.status == 'Pending' %}
+                    <form method="post" action="{% url 'projects:handle_request_action' req.pk 'accept' %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-sm">Accept</button>
+                    </form>
+                    <form method="post" action="{% url 'projects:handle_request_action' req.pk 'reject' %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                {% elif req.status == 'Accepted' %}
+                    <form method="post" action="{% url 'projects:handle_request_action' req.pk 'remove' %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline btn-sm">Remove from Roster</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <p class="text-muted">No join requests have been submitted to your projects yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

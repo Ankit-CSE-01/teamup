@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Collaboration Analytics | TeamUp{% endblock %}
+
+{% block content %}
+<div class="dashboard-header card">
+    <div>
+        <h1>Department Collaboration Analytics</h1>
+        <p class="text-muted">Real-time visibility into student projects, skill demand vs. supply, and cross-year participation.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'projects:export_rosters_csv' %}" class="btn btn-primary">📥 Export All Rosters (CSV)</a>
+        <a href="{% url 'projects:project_list' %}" class="btn btn-outline">Back to Projects</a>
+    </div>
+</div>
+
+<!-- KPI Summary Cards -->
+<section class="kpi-grid">
+    <div class="card kpi-card">
+        <span class="text-muted">Total Projects</span>
+        <h2 class="kpi-value">{{ total_projects }}</h2>
+        <small>{{ open_projects }} Open • {{ closed_projects }} Closed</small>
+    </div>
+
+    <div class="card kpi-card">
+        <span class="text-muted">Join Applications</span>
+        <h2 class="kpi-value">{{ total_requests }}</h2>
+        <small>{{ accepted_requests }} Accepted ({{ acceptance_rate }}% rate)</small>
+    </div>
+
+    <div class="card kpi-card">
+        <span class="text-muted">Cross-Year Placements</span>
+        <h2 class="kpi-value">{{ cross_year_collaborations }}</h2>
+        <small>Students teamed up across different study years</small>
+    </div>
+</section>
+
+<div class="dashboard-two-col">
+    <!-- 1. Projects by Category -->
+    <section class="card">
+        <h2>Projects by Category</h2>
+        <p class="text-muted">Distribution of hackathons, coursework projects, research, and startups.</p>
+
+        <div class="analytics-list mt-2">
+            {% for cat in category_stats %}
+                <div class="analytics-row">
+                    <div class="analytics-row-header">
+                        <strong>
+                            <a href="{% url 'projects:category_projects' cat.slug %}">{{ cat.label }}</a>
+                        </strong>
+                        <span>
+                            <strong>{{ cat.total }}</strong> ({{ cat.percentage }}%)
+                            <small class="text-muted">[{{ cat.open_count }} Open / {{ cat.closed_count }} Closed]</small>
+                        </span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width: {{ cat.percentage }}%;"></div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- 2. Most In-Demand Skills -->
+    <section class="card">
+        <h2>Most In-Demand Technical Skills</h2>
+        <p class="text-muted">Comparing project skill requirements against student profile skills.</p>
+
+        <div class="analytics-list mt-2">
+            {% for skill in skill_stats %}
+                <div class="analytics-row">
+                    <div class="analytics-row-header">
+                        <a href="{% url 'projects:project_list' %}?skill={{ skill.slug }}" class="skill-tag">{{ skill.name }}</a>
+                        <span>
+                            <strong>{{ skill.project_demand }}</strong> projects need •
+                            <span class="text-muted">{{ skill.student_supply }} students have</span>
+                        </span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width: {{ skill.demand_bar_pct }}%;"></div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-muted">No skill data available yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<!-- 3. Collaboration Rates Across Study Years -->
+<section class="card">
+    <h2>Collaboration Rates Across Study Years (1st – 4th Year)</h2>
+    <p class="text-muted">Measures active student participation (leading a project or applying to join teams) by academic year.</p>
+
+    <div class="table-responsive mt-2">
+        <table class="analytics-table">
+            <thead>
+                <tr>
+                    <th>Academic Year</th>
+                    <th>Registered Students</th>
+                    <th>Active Collaborators</th>
+                    <th>Projects Led</th>
+                    <th>Applications Sent</th>
+                    <th>Accepted Roster Spots</th>
+                    <th>Participation Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for yr in year_stats %}
+                    <tr>
+                        <td><strong>{{ yr.year_label }}</strong></td>
+                        <td>{{ yr.total_students }}</td>
+                        <td>{{ yr.active_students }}</td>
+                        <td>{{ yr.projects_led }}</td>
+                        <td>{{ yr.applications_sent }}</td>
+                        <td>{{ yr.accepted_spots }}</td>
+                        <td>
+                            <div class="table-progress-wrap">
+                                <div class="progress-track">
+                                    <div class="progress-fill" style="width: {{ yr.participation_rate }}%;"></div>
+                                </div>
+                                <span><strong>{{ yr.participation_rate }}%</strong></span>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

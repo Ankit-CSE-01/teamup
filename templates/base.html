@@ -1,0 +1,152 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ request.COOKIES.theme|default:'light' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TeamUp | University Project & Hackathon Matchmaking{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3.2">
+</head>
+<body class="{% if request.COOKIES.theme == 'dark' %}theme-dark{% else %}theme-light{% endif %}">
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="{% url 'projects:project_list' %}" class="brand">
+                <span class="brand-badge">TU</span>
+                <span>TeamUp <small class="brand-sub">CSE Collab</small></span>
+            </a>
+
+            <nav class="nav-links">
+                <a href="{% url 'projects:project_list' %}">Explore Projects</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:student_directory' %}">Find Peers</a>
+                    <a href="{% url 'projects:dashboard' %}">Dashboard</a>
+                    <a href="{% url 'projects:project_create' %}">+ Post Project</a>
+                    <a href="{% url 'projects:manage_requests' %}">Manage Requests</a>
+                    <a href="{% url 'projects:my_applications' %}">My Applications</a>
+                    {% if user.is_staff or user.is_superuser %}
+                        <a href="{% url 'projects:faculty_analytics' %}">📊 Analytics</a>
+                    {% endif %}
+                {% endif %}
+            </nav>
+
+            <div class="nav-actions">
+                {% if request.COOKIES.theme == 'dark' %}
+                    <a href="{% url 'accounts:toggle_theme' 'light' %}" class="btn btn-outline btn-sm" title="Switch to Light Theme">☀️ Light</a>
+                {% else %}
+                    <a href="{% url 'accounts:toggle_theme' 'dark' %}" class="btn btn-outline btn-sm" title="Switch to Dark Theme">🌙 Dark</a>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:profile_detail' user.username %}" class="user-pill">
+                        {{ user.username }}
+                    </a>
+                    <form action="{% url 'accounts:logout' %}" method="post" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline btn-sm">Login</a>
+                    <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-sm">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        {% if messages %}
+            <div class="messages-wrapper">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-directory">
+                <div class="footer-column">
+                    <h4>Explore Projects</h4>
+                    <ul>
+                        <li><a href="{% url 'projects:project_list' %}">All Projects</a></li>
+                        <li><a href="{% url 'projects:category_projects' 'hackathon' %}">Hackathons</a></li>
+                        <li><a href="{% url 'projects:category_projects' 'mini-project' %}">Mini Projects</a></li>
+                        <li><a href="{% url 'projects:category_projects' 'major-project' %}">Major & Capstone</a></li>
+                        <li><a href="{% url 'projects:category_projects' 'research' %}">Research Collaborations</a></li>
+                        <li><a href="{% url 'projects:category_projects' 'startup' %}">Campus Startups</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Student Hub</h4>
+                    <ul>
+                        {% if user.is_authenticated %}
+                            <li><a href="{% url 'accounts:student_directory' %}">Student Directory</a></li>
+                            <li><a href="{% url 'projects:project_create' %}">Pitch New Project</a></li>
+                            <li><a href="{% url 'projects:dashboard' %}">Personal Dashboard</a></li>
+                            <li><a href="{% url 'projects:my_applications' %}">My Applications</a></li>
+                            <li><a href="{% url 'projects:manage_requests' %}">Manage Team Requests</a></li>
+                            <li><a href="{% url 'accounts:profile_detail' user.username %}">My Profile</a></li>
+                        {% else %}
+                            <li><a href="{% url 'accounts:signup' %}">Create Student Profile</a></li>
+                            <li><a href="{% url 'accounts:login' %}">Student & Faculty Sign In</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Department & API</h4>
+                    <ul>
+                        <li><a href="/admin/">Django Admin Panel</a></li>
+                        {% if user.is_authenticated and user.is_staff or user.is_superuser %}
+                            <li><a href="{% url 'projects:faculty_analytics' %}">Department Analytics</a></li>
+                            <li><a href="{% url 'projects:export_rosters_csv' %}">Export Rosters (CSV)</a></li>
+                        {% endif %}
+                        <li><a href="{% url 'projects:api_open_projects' %}">Projects JSON API</a></li>
+                        {% if user.is_authenticated %}
+                            <li><a href="{% url 'accounts:api_profile_detail' user.username %}">Profile JSON Endpoint</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="footer-column footer-brand-column">
+                    <div class="footer-brand-title">
+                        <span class="brand-badge">TU</span>
+                        <span>TeamUp</span>
+                    </div>
+                    <p class="footer-desc">
+                        Connecting Computer Science & Engineering students across years and sections to build cross-functional teams for hackathons, research publications, and startup ventures.
+                    </p>
+                    <p class="footer-contact text-muted">
+                        Have ideas or feedback? Reach out to your campus coordinator.
+                    </p>
+                </div>
+            </div>
+
+            <div class="footer-divider"></div>
+
+            <div class="footer-bottom">
+                <div class="footer-legal">
+                    <span class="copyright">Copyright © 2026 TeamUp. All rights reserved.</span>
+                    <div class="legal-links">
+                        <a href="{% url 'projects:project_list' %}">Explore</a>
+                        <span class="divider">·</span>
+                        <a href="javascript:void(0)">Privacy Policy</a>
+                        <span class="divider">·</span>
+                        <a href="javascript:void(0)">Terms of Use</a>
+                        <span class="divider">·</span>
+                        <a href="javascript:void(0)">Campus Guidelines</a>
+                    </div>
+                </div>
+                <div class="footer-locale">
+                    <span>India (English)</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

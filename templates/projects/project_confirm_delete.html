@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ project.title }} | TeamUp{% endblock %}
+
+{% block content %}
+<div class="form-card card">
+    <h1>Confirm Project Deletion</h1>
+    <p>Are you sure you want to permanently delete <strong>"{{ project.title }}"</strong> and all associated join requests?</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Yes, Delete Project</button>
+            <a href="{% url 'projects:project_detail' project.pk %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

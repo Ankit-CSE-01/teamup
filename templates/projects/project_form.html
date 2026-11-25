@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Edit Project{% else %}Post a New Project{% endif %} | TeamUp{% endblock %}
+
+{% block content %}
+<div class="form-card card">
+    <h1>{% if is_edit %}Edit Project: {{ project.title }}{% else %}Post a New Project{% endif %}</h1>
+    <p class="text-muted">Specify the skills you need so TeamUp can recommend your project to matching students.</p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small class="help-text">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if is_edit %}Save Changes{% else %}Publish Project{% endif %}
+            </button>
+            <a href="{% if is_edit %}{% url 'projects:project_detail' project.pk %}{% else %}{% url 'projects:dashboard' %}{% endif %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
